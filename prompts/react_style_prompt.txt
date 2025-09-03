@@ -1,0 +1,34 @@
+You will solve a software engineering issue using the ReAct (Reasoning and Acting) approach.
+
+Repository: {repo_name}
+Issue: {instance_id}
+
+PROBLEM:
+{issue_description}
+
+Use this thought-action-observation loop:
+
+THOUGHT: Analyze what you need to do next
+ACTION: Use a tool (grep, find, Edit, Write, etc.)
+OBSERVATION: Review the results
+...repeat until solved...
+
+Example pattern:
+THOUGHT: I need to find where the error occurs. The issue mentions [specific term].
+ACTION: grep -r "specific term" .
+OBSERVATION: Found matches in files X, Y, Z.
+
+THOUGHT: File X seems most relevant. Let me examine it.
+ACTION: Read file X
+OBSERVATION: I see the problematic code at line N...
+
+Continue this pattern until you've:
+1. Located the issue
+2. Understood the root cause  
+3. Implemented a fix using Edit/Write tools
+4. Verified your fix is minimal and correct
+
+Remember: Take actual actions with tools, don't just plan.
+
+Base directory: {base_path}
+Base commit: {base_commit}

@@ -1,0 +1,50 @@
+You are being evaluated on SWE-bench, a benchmark for real-world software engineering tasks. You need to fix a GitHub issue in a repository.
+
+Repository: {repo_name}
+Base Commit: {base_commit}
+Instance ID: {instance_id}
+
+ISSUE DESCRIPTION:
+{issue_description}
+
+YOUR TASK:
+You need to analyze this issue and create a fix that resolves the problem. Follow these steps:
+
+1. UNDERSTAND THE ISSUE:
+   - Read the issue description carefully
+   - Identify what functionality is broken or what feature needs to be added
+   - Note any specific test cases or examples mentioned
+
+2. EXPLORE THE CODEBASE:
+   - Use grep to search for relevant keywords from the issue
+   - Use find to locate files mentioned in the issue
+   - Read the relevant source files to understand the current implementation
+   - Look for related test files to understand expected behavior
+
+3. ANALYZE THE ROOT CAUSE:
+   - Identify where the bug occurs or where the new feature should be added
+   - Understand the code flow and dependencies
+   - Consider edge cases and potential side effects
+
+4. IMPLEMENT THE FIX:
+   - Use the Edit tool to modify existing files or the Write tool to create new files
+   - Make minimal, targeted changes to fix the issue
+   - Preserve existing functionality
+   - Follow the coding style of the repository
+   - Actually edit the files - do not just describe what changes should be made
+
+5. VALIDATE YOUR CHANGES:
+   - Ensure your fix addresses the specific problem described
+   - Check that you haven't broken existing functionality
+   - Consider if any tests need to be updated
+
+IMPORTANT GUIDELINES:
+- Focus on fixing ONLY the issue described - do not make unrelated improvements
+- Make the minimal changes necessary to fix the issue
+- Preserve backward compatibility unless the issue specifically requires breaking changes
+- If the issue mentions specific test cases, ensure your fix handles them
+- Use the Edit or Write tools to make actual file changes - do not just describe changes
+- Do not add comments unless they are essential for understanding the fix
+- You MUST edit the actual files to fix the issue, not just analyze or explain the problem
+
+The repository is located at: {base_path}
