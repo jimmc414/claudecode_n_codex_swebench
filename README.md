@@ -32,7 +32,7 @@ python swe_bench.py check
 python swe_bench.py quick
 ```
 
-That's it! You're now measuring Claude Code's real performance.
+That should be all you need to measure Claude Code's performance.
 
 ## Prerequisites
 
@@ -390,28 +390,6 @@ docker ps
 # Test Docker works
 docker run hello-world
 ```
-
-If you encounter issues, Docker's official documentation has detailed troubleshooting guides for each platform.
-
-## Why This Matters
-
-Software engineering involves complex, multi-step problem solving that requires:
-- Understanding existing codebases
-- Identifying root causes of issues  
-- Implementing fixes that don't break existing functionality
-- Following project conventions and patterns
-
-SWE-bench tests all these capabilities with real-world problems. The scores provide an objective measure of how well Claude Code handles actual software engineering tasks, not just toy problems or synthetic benchmarks.
-
-By running these tests yourself, you can:
-- Make informed decisions about Claude Code's capabilities
-- Track performance improvements over time
-- Compare different models objectively
-- Understand where Claude Code excels and where it struggles
-
-## Contributing
-
-The goal is empirical measurement, not optimization. Contributions that improve measurement accuracy, add new metrics, or enhance reproducibility are welcome. The focus should remain on providing objective, verifiable performance data.
 
 ## License
 
