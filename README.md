@@ -32,7 +32,6 @@ python swe_bench.py check
 python swe_bench.py quick
 ```
 
-That should be all you need to measure Claude Code's performance.
 
 ## Prerequisites
 
@@ -390,6 +389,7 @@ docker ps
 # Test Docker works
 docker run hello-world
 ```
+
 
 ## License
 

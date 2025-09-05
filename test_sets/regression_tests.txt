@@ -1,0 +1,23 @@
+# SWE-bench Regression Test Set
+# These are good instances for comparing performance across different days/models
+# Format: instance_id
+
+# String/Text Processing Issues
+django__django-11999
+django__django-12908
+django__django-13265
+
+# Logic/Algorithm Issues  
+sympy__sympy-18189
+sympy__sympy-20590
+scikit-learn__scikit-learn-13439
+
+# API/Interface Issues
+matplotlib__matplotlib-23913
+requests__requests-2674
+flask__flask-4992
+
+# Testing/Validation Issues
+pytest-dev__pytest-5495
+django__django-13768
+astropy__astropy-12907
