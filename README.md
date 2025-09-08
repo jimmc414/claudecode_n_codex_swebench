@@ -132,6 +132,32 @@ python swe_bench.py run --limit 20 --max-workers 4 # More parallel containers
 python swe_bench.py run --dataset princeton-nlp/SWE-bench_Lite --limit 10
 ```
 
+### Running Specific Test Instances
+
+When establishing a baseline or debugging specific issues, you can run SWE-bench against individual test instances:
+
+```bash
+# Using claude_swe_agent.py directly (patch generation only)
+python claude_swe_agent.py --instance_id django__django-11133
+
+# With full SWE-bench dataset instead of Lite
+python claude_swe_agent.py --instance_id django__django-11133 --dataset_name princeton-nlp/SWE-bench
+
+# With specific model for baseline comparison
+python claude_swe_agent.py --instance_id django__django-11133 --model opus-4.1
+
+# Finding available instance IDs
+python -c "from datasets import load_dataset; ds = load_dataset('princeton-nlp/SWE-bench_Lite', split='test'); print('\n'.join([d['instance_id'] for d in ds][:20]))"
+```
+
+**Use Cases for Single Instance Testing:**
+- Establishing performance baselines for specific problem types
+- Debugging Claude Code's approach to particular challenges
+- Comparing model performance on identical problems
+- Validating fixes after prompt or model updates
+
+**Note:** Instance IDs follow the format `<repo>__<repo>-<issue_number>` (e.g., `django__django-11133`, `sympy__sympy-20154`)
+
 ### Evaluating Past Runs
 
 ```bash
