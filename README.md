@@ -10,7 +10,7 @@ The SWE-bench benchmark presents Claude Code with actual GitHub issues from popu
 
 ```bash
 # Assuming you have Python, Claude Code CLI, and Docker installed:
-git clone <this-repo>
+git clone https://github.com/jimmc414/claudecode_swebench.git
 cd claudecode_swe_bench
 pip install -r requirements.txt
 python swe_bench.py run --limit 1  # Run your first test (~10 min)
