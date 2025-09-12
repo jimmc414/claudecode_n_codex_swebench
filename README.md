@@ -23,7 +23,8 @@ For detailed setup instructions, see [Prerequisites](#prerequisites) and [Instal
 
 ```bash
 # 1. Run your first test (1 instance, ~10 minutes)
-python swe_bench.py run --limit 1
+python swe_bench.py run --limit 1               # Claude Code (default)
+python swe_bench.py run --limit 1 --backend codex  # Codex
 
 # 2. Check your results
 python swe_bench.py check
@@ -42,11 +43,13 @@ Before starting, ensure you have:
    python --version  # Should show 3.8+
    ```
 
-2. **Claude Code CLI installed and logged in**
+2. **Claude Code or Codex CLI installed and logged in**
    ```bash
-   # Install if needed: https://claude.ai/download
+   # Claude Code
    claude --version  # Should work without errors
-   # If not logged in, run: claude
+   # Codex
+   codex --version   # Should work without errors
+   # If not logged in, run the relevant CLI (claude or codex)
    ```
 
 3. **Docker installed and running**
@@ -76,7 +79,8 @@ cd claudecode_swe_bench
 pip install -r requirements.txt
 
 # 3. Verify everything is working
-python swe_bench.py list-models  # Should list available models
+python swe_bench.py list-models               # Claude models
+python swe_bench.py list-models --backend codex  # Codex models
 
 # Optional: Quick test to verify full setup
 python swe_bench.py run --limit 1 --no-eval  # Test without Docker (2-5 min)
@@ -88,6 +92,7 @@ python swe_bench.py run --limit 1            # Full test with Docker (10-15 min)
 If you get errors:
 
 - **"Claude CLI not found"**: Install from https://claude.ai/download
+- **"Codex CLI not found"**: Ensure `codex` is installed and in your PATH
 - **"Docker daemon not running"**: Start Docker Desktop or `sudo systemctl start docker`
 - **"swebench not found"**: Run `pip install swebench`
 - **Out of memory**: Increase Docker memory in Docker Desktop settings
@@ -105,9 +110,10 @@ python swe_bench.py
 
 # Quick commands
 python swe_bench.py quick          # 10 instances with evaluation
-python swe_bench.py full           # 300 instances with evaluation  
+python swe_bench.py full           # 300 instances with evaluation
 python swe_bench.py check          # View scores and statistics
-python swe_bench.py list-models    # Show available Claude models
+python swe_bench.py list-models    # Show available models (Claude by default)
+python swe_bench.py list-models --backend codex  # Show Codex models
 ```
 
 ### Running Benchmarks

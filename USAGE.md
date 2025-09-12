@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-The `swe_bench.py` tool combines all benchmark functionality into one command.
+The `swe_bench.py` tool combines all benchmark functionality into one command and supports both Claude Code and Codex backends.
 
 ### Common Commands
 
@@ -54,7 +54,7 @@ python swe_bench.py run --quick --backend codex
 ### Model Selection
 
 ```bash
-# List available models
+# List available models (Claude by default)
 python swe_bench.py list-models
 # Codex models
 python swe_bench.py list-models --backend codex
