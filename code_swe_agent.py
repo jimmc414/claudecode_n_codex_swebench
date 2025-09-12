@@ -62,25 +62,25 @@ class CodeSWEAgent:
         base_commit = instance["base_commit"]
 
         # Create temporary directory for this instance (cross-platform)
-        temp_dir = os.path.join(tempfile.gettempdir(), f"swe_bench_{instance_id}")
-        
+        temp_dir = Path(tempfile.gettempdir()) / f"swe_bench_{instance_id}"
+
         try:
             # Remove if exists
-            if os.path.exists(temp_dir):
+            if temp_dir.exists():
                 shutil.rmtree(temp_dir)
-                
+
             # Save current directory
-            original_dir = os.getcwd()
+            original_dir = Path.cwd()
             
             # Clone repository
             print(f"Cloning {repo_name} to {temp_dir}")
             clone_url = f"https://github.com/{repo_name}.git"
             
             result = subprocess.run(
-                ["git", "clone", clone_url, temp_dir],
+                ["git", "clone", clone_url, str(temp_dir)],
                 capture_output=True,
                 text=True,
-                cwd=original_dir  # Ensure we're in a valid directory
+                cwd=str(original_dir)  # Ensure we're in a valid directory
             )
             
             if result.returncode != 0:
@@ -97,17 +97,17 @@ class CodeSWEAgent:
             
             if result.returncode != 0:
                 print(f"Failed to checkout commit: {result.stderr}")
-                os.chdir(original_dir)  # Return to original directory
+                os.chdir(str(original_dir))  # Return to original directory
                 return None
-            
-            os.chdir(original_dir)  # Return to original directory
-            return temp_dir
+
+            os.chdir(str(original_dir))  # Return to original directory
+            return str(temp_dir)
             
         except Exception as e:
             print(f"Error setting up repository: {e}")
             # Try to return to original directory if possible
             try:
-                os.chdir(original_dir)
+                os.chdir(str(original_dir))
             except:
                 pass
             return None
