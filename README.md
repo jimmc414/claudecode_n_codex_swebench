@@ -10,8 +10,8 @@ The SWE-bench benchmark presents the model with actual GitHub issues from popula
 
 ```bash
 # Assuming you have Python, a code model CLI (Claude or Codex), and Docker installed:
-git clone https://github.com/jimmc414/claudecode_swebench.git
-cd claudecode_swe_bench
+git clone https://github.com/jimmc414/claudecode_n_codex_swebench.git
+cd claudecode_n_codex_swebench
 pip install -r requirements.txt
 python swe_bench.py run --limit 1  # Run your first test (~10 min)
 python swe_bench.py check           # See your results
@@ -73,7 +73,7 @@ Before starting, ensure you have:
 ```bash
 # 1. Clone this repository
 git clone <repository-url>
-cd claudecode_swe_bench
+cd claudecode_n_codex_swebench
 
 # 2. Install all Python dependencies (includes swebench)
 pip install -r requirements.txt
@@ -267,7 +267,7 @@ Based on empirical testing with SWE-bench:
 ## Project Structure
 
 ```
-claudecode_swe_bench/
+claudecode_n_codex_swebench/
 ├── swe_bench.py              # Main unified tool (all commands)
 ├── code_swe_agent.py         # Core agent for Claude Code or Codex
 ├── USAGE.md                  # Detailed command usage guide
