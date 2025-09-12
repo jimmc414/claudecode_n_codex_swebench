@@ -15,13 +15,14 @@ import jsonlines
 from datasets import load_dataset
 
 class EnhancedBenchmarkRunner:
-    def __init__(self, model=None):
+    def __init__(self, model=None, backend="claude"):
         self.base_dir = Path.cwd()
         self.log_file = self.base_dir / "benchmark_scores.log"
         self.predictions_dir = self.base_dir / "predictions"
         self.results_dir = self.base_dir / "results"
         self.eval_results_dir = self.base_dir / "evaluation_results"
         self.model = model
+        self.backend = backend
         
         # Create directories
         self.predictions_dir.mkdir(exist_ok=True)
@@ -45,6 +46,7 @@ class EnhancedBenchmarkRunner:
             "generation_time": generation_time,
             "evaluation_time": evaluation_time,
             "model": self.model,
+            "backend": self.backend,
             "notes": notes
         }
         
@@ -61,18 +63,18 @@ class EnhancedBenchmarkRunner:
             print(f"   Evaluation: {evaluation_status}")
             
     def run_inference(self, dataset_name, limit):
-        """Run Claude Code on the dataset"""
+        """Run code model on the dataset"""
         model_info = f" with model {self.model}" if self.model else ""
-        print(f"\n🚀 Running Claude Code{model_info} on {dataset_name} (limit: {limit})...")
-        
+        print(f"\n🚀 Running {self.backend.title()} Code{model_info} on {dataset_name} (limit: {limit})...")
+
         cmd = [
             sys.executable,
-            "claude_swe_agent.py",
+            "code_swe_agent.py",
             "--dataset_name", dataset_name,
-            "--limit", str(limit)
+            "--limit", str(limit),
+            "--backend", self.backend,
         ]
-        
-        # Add model parameter if specified
+
         if self.model:
             cmd.extend(["--model", self.model])
         
@@ -142,14 +144,14 @@ class EnhancedBenchmarkRunner:
             for pred in predictions:
                 eval_pred = {
                     "instance_id": pred.get("instance_id", ""),
-                    "model_name_or_path": "claude-code",
+                    "model_name_or_path": f"{self.backend}-code",
                     "model_patch": pred.get("prediction", "")
                 }
                 writer.write(eval_pred)
         
         # Run evaluation
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        run_id = f"claude_code_{timestamp}"
+        run_id = f"{self.backend}_code_{timestamp}"
         
         cmd = [
             sys.executable, "-m", "swebench.harness.run_evaluation",

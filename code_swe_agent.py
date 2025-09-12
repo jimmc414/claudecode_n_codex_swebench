@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Claude Code SWE-bench Agent
-Main script to run Claude Code on SWE-bench instances
+SWE-bench agent capable of using Claude Code or Codex backends.
 """
 
 import argparse
@@ -20,38 +19,50 @@ from tqdm import tqdm
 import jsonlines
 
 from utils.claude_interface import ClaudeCodeInterface
+from utils.codex_interface import CodexCodeInterface
 from utils.prompt_formatter import PromptFormatter
 from utils.patch_extractor import PatchExtractor
 from utils.model_registry import get_model_name
 
 
-class ClaudeSWEAgent:
-    """Main agent for running Claude Code on SWE-bench."""
-    
-    def __init__(self, prompt_template: Optional[str] = None, model: Optional[str] = None):
-        self.claude_interface = ClaudeCodeInterface()
+DEFAULT_BACKEND = os.environ.get("CODE_SWE_BACKEND", "claude")
+
+
+class CodeSWEAgent:
+    """Main agent for running SWE-bench using different code models."""
+
+    def __init__(self, prompt_template: Optional[str] = None,
+                 model: Optional[str] = None,
+                 backend: str = DEFAULT_BACKEND):
+        self.backend = (backend or DEFAULT_BACKEND).lower()
+        if self.backend == "codex":
+            self.interface = CodexCodeInterface()
+        else:
+            self.backend = "claude"
+            self.interface = ClaudeCodeInterface()
+
         self.prompt_formatter = PromptFormatter(prompt_template)
         self.patch_extractor = PatchExtractor()
         self.base_dir = Path.cwd()
         self.results_dir = self.base_dir / "results"
         self.predictions_dir = self.base_dir / "predictions"
-        
+
         # Resolve model name from alias
-        self.model = get_model_name(model) if model else None
+        self.model = get_model_name(model, self.backend) if model else None
         self.model_alias = model  # Keep original alias for logging
-        
+
         # Create directories if they don't exist
         self.results_dir.mkdir(exist_ok=True)
         self.predictions_dir.mkdir(exist_ok=True)
-        
+
     def setup_repository(self, instance: Dict) -> Optional[str]:
         """Set up a repository for testing."""
         instance_id = instance["instance_id"]
         repo_name = instance["repo"]
         base_commit = instance["base_commit"]
-        
-        # Create temporary directory for this instance
-        temp_dir = f"/tmp/swe_bench_{instance_id}"
+
+        # Create temporary directory for this instance (cross-platform)
+        temp_dir = os.path.join(tempfile.gettempdir(), f"swe_bench_{instance_id}")
         
         try:
             # Remove if exists
@@ -105,84 +116,72 @@ class ClaudeSWEAgent:
         """Process a single SWE-bench instance."""
         instance_id = instance["instance_id"]
         print(f"\nProcessing {instance_id}")
-        
-        # Save original working directory
+
         original_dir = os.getcwd()
-        
-        # Set up repository
+
         repo_path = self.setup_repository(instance)
         if not repo_path:
             return {
                 "instance_id": instance_id,
-                "model": "claude-code",
+                "model": f"{self.backend}-code",
                 "prediction": "",
-                "error": "Failed to set up repository"
+                "error": "Failed to set up repository",
             }
-            
+
         try:
-            # Format prompt for Claude Code
             prompt = self.prompt_formatter.format_for_cli(instance)
-            
-            # Save initial git state
+
             os.chdir(repo_path)
             subprocess.run(["git", "add", "-A"], capture_output=True)
             subprocess.run(["git", "stash"], capture_output=True)
-            
-            # Execute Claude Code
+
             model_info = f" with model {self.model_alias}" if self.model else ""
-            print(f"Running Claude Code{model_info}...")
-            result = self.claude_interface.execute_claude_code_cli(prompt, repo_path, self.model)
-            
+            print(f"Running {self.backend.title()} Code{model_info}...")
+            result = self.interface.execute_code_cli(prompt, repo_path, self.model)
+
             if not result["success"]:
-                print(f"Claude Code execution failed: {result['stderr']}")
-                os.chdir(original_dir)  # Restore directory before returning
+                print(f"{self.backend.title()} Code execution failed: {result['stderr']}")
+                os.chdir(original_dir)
                 return {
                     "instance_id": instance_id,
-                    "model": self.model_alias or "claude-code",
+                    "model": self.model_alias or f"{self.backend}-code",
                     "prediction": "",
-                    "error": f"Execution failed: {result['stderr']}"
+                    "error": f"Execution failed: {result['stderr']}",
                 }
-                
-            # Extract patch from git diff
+
             patch = self.patch_extractor.extract_from_cli_output(result["stdout"], repo_path)
-            
-            # Validate patch
+
             is_valid, error = self.patch_extractor.validate_patch(patch)
             if not is_valid:
                 print(f"Invalid patch: {error}")
-                patch = ""  # Submit empty patch if invalid
-                
-            # Format for SWE-bench
+                patch = ""
+
             prediction = self.patch_extractor.format_for_swebench(
-                patch, instance_id, self.model_alias or "claude-code"
+                patch, instance_id, self.model_alias or f"{self.backend}-code"
             )
-            
-            # Save result
+
             self._save_result(instance_id, result, patch)
-            
+
             return prediction
-            
+
         except Exception as e:
             import traceback
             print(f"Error processing instance: {e}")
             print(f"Traceback: {traceback.format_exc()}")
             return {
                 "instance_id": instance_id,
-                "model": self.model_alias or "claude-code",
+                "model": self.model_alias or f"{self.backend}-code",
                 "prediction": "",
-                "error": str(e)
+                "error": str(e),
             }
         finally:
-            # Restore original directory first
             try:
                 os.chdir(original_dir)
             except Exception as e:
                 print(f"Warning: Could not restore directory: {e}")
-            
-            # Cleanup
+
             if repo_path and os.path.exists(repo_path):
                 shutil.rmtree(repo_path)
-                
     def _save_result(self, instance_id: str, result: Dict, patch: str):
         """Save detailed results for debugging."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -251,8 +250,8 @@ class ClaudeSWEAgent:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run Claude Code on SWE-bench")
-    parser.add_argument("--dataset_name", type=str, 
+    parser = argparse.ArgumentParser(description="Run code models on SWE-bench")
+    parser.add_argument("--dataset_name", type=str,
                        default="princeton-nlp/SWE-bench_Lite",
                        help="Dataset to use")
     parser.add_argument("--instance_id", type=str,
@@ -262,22 +261,26 @@ def main():
     parser.add_argument("--prompt_template", type=str,
                        help="Path to custom prompt template")
     parser.add_argument("--model", type=str,
-                       help="Model to use (e.g., opus-4.1, sonnet-3.7, or any /model name)")
+                       help="Model to use (e.g., opus-4.1, codex-4.2, or any name)")
+    parser.add_argument("--backend", type=str, choices=["claude", "codex"],
+                       help="Code model backend to use")
     
     args = parser.parse_args()
     
-    # Check if Claude Code is available
+    backend = args.backend or DEFAULT_BACKEND
+
+    # Check if selected CLI is available
+    cli_cmd = "codex" if backend == "codex" else "claude"
     try:
-        result = subprocess.run(["claude", "--version"], capture_output=True, text=True)
+        result = subprocess.run([cli_cmd, "--version"], capture_output=True, text=True)
         if result.returncode != 0:
-            print("Error: Claude Code CLI not found. Please ensure 'claude' is installed and in PATH")
+            print(f"Error: {cli_cmd} CLI not found. Please ensure '{cli_cmd}' is installed and in PATH")
             sys.exit(1)
     except FileNotFoundError:
-        print("Error: Claude Code CLI not found. Please ensure 'claude' is installed and in PATH")
+        print(f"Error: {cli_cmd} CLI not found. Please ensure '{cli_cmd}' is installed and in PATH")
         sys.exit(1)
-        
-    # Initialize agent with model if specified
-    agent = ClaudeSWEAgent(args.prompt_template, args.model)
+
+    agent = CodeSWEAgent(args.prompt_template, args.model, backend)
     
     # Run on specific instance or dataset
     if args.instance_id:

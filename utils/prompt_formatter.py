@@ -1,4 +1,6 @@
 import json
+import tempfile
+from pathlib import Path
 from typing import Dict, Optional
 
 class PromptFormatter:
@@ -54,13 +56,15 @@ Base directory: {base_path}
         instance_id = instance.get("instance_id", "")
         
         # Format the prompt
+        base_path = Path(tempfile.gettempdir()) / f"swe_bench_{instance_id}"
+
         prompt = self.base_template.format(
             repo_name=repo_name,
             issue_title=issue_title,
             issue_description=issue_description,
-            base_path=f"/tmp/swe_bench_{instance_id}",
+            base_path=str(base_path),
             instance_id=instance_id,
-            base_commit=base_commit
+            base_commit=base_commit,
         )
         
         # Add any hints if available

@@ -168,7 +168,7 @@ class PredictionEvaluator:
             for pred in predictions:
                 eval_pred = {
                     "instance_id": pred.get("instance_id", ""),
-                    "model_name_or_path": "claude-code",
+                    "model_name_or_path": pred.get("model", "claude-code"),
                     "model_patch": pred.get("prediction", "")
                 }
                 writer.write(eval_pred)
