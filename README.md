@@ -1,15 +1,15 @@
-# Claude Code SWE-bench Performance Monitor
+# SWE-bench Code Model Performance Monitor
 
 ## Purpose
 
-This project provides an empirical framework for measuring Claude Code's performance on real-world software engineering tasks. It was built to provide objective, reproducible metrics that allow users to assess Claude Code's capabilities for themselves, rather than relying on anecdotal reports or marketing claims.
+This project provides an empirical framework for measuring the performance of code-focused language models like Claude Code and Codex on real-world software engineering tasks. It was built to provide objective, reproducible metrics that allow users to assess these tools for themselves, rather than relying on anecdotal reports or marketing claims.
 
-The SWE-bench benchmark presents Claude Code with actual GitHub issues from popular open-source projects and measures its ability to generate patches that successfully resolve these issues. This provides a concrete, measurable answer to the question: "How well does Claude Code actually perform on real software engineering tasks?"
+The SWE-bench benchmark presents the model with actual GitHub issues from popular open-source projects and measures its ability to generate patches that successfully resolve these issues. This provides a concrete, measurable answer to the question: "How well do these code models actually perform on real software engineering tasks?"
 
 ## Getting Started in 5 Minutes
 
 ```bash
-# Assuming you have Python, Claude Code CLI, and Docker installed:
+# Assuming you have Python, a code model CLI (Claude or Codex), and Docker installed:
 git clone https://github.com/jimmc414/claudecode_swebench.git
 cd claudecode_swe_bench
 pip install -r requirements.txt
@@ -137,17 +137,20 @@ python swe_bench.py run --dataset princeton-nlp/SWE-bench_Lite --limit 10
 When establishing a baseline or debugging specific issues, you can run SWE-bench against individual test instances:
 
 ```bash
-# Using claude_swe_agent.py directly (patch generation only)
-python claude_swe_agent.py --instance_id django__django-11133
+# Using code_swe_agent.py directly (patch generation only)
+python code_swe_agent.py --instance_id django__django-11133
+
+# Specify backend explicitly
+python code_swe_agent.py --instance_id django__django-11133 --backend codex
 
 # With full SWE-bench dataset instead of Lite
-python claude_swe_agent.py --instance_id django__django-11133 --dataset_name princeton-nlp/SWE-bench
+python code_swe_agent.py --instance_id django__django-11133 --dataset_name princeton-nlp/SWE-bench
 
 # With specific model for baseline comparison
-python claude_swe_agent.py --instance_id django__django-11133 --model opus-4.1
+python code_swe_agent.py --instance_id django__django-11133 --model opus-4.1
 
 # Finding available instance IDs
-python -c "from datasets import load_dataset; ds = load_dataset('princeton-nlp/SWE-bench_Lite', split='test'); print('\n'.join([d['instance_id'] for d in ds][:20]))"
+python -c "from datasets import load_dataset; ds = load_dataset('princeton-nlp/SWE-bench_Lite', split='test'); print('\\n'.join([d['instance_id'] for d in ds][:20]))"
 ```
 
 **Use Cases for Single Instance Testing:**
@@ -260,7 +263,7 @@ Based on empirical testing with SWE-bench:
 ```
 claudecode_swe_bench/
 ├── swe_bench.py              # Main unified tool (all commands)
-├── claude_swe_agent.py       # Core agent that runs Claude Code
+├── code_swe_agent.py         # Core agent for Claude Code or Codex
 ├── USAGE.md                  # Detailed command usage guide
 ├── benchmark_scores.log      # Results log (JSON lines format)
 ├── requirements.txt          # Python dependencies

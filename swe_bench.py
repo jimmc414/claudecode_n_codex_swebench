@@ -33,10 +33,14 @@ from run_benchmark_with_eval import EnhancedBenchmarkRunner
 from evaluate_predictions import PredictionEvaluator
 from show_scores import ScoreViewer
 from utils.model_registry import list_models, get_model_name
+from code_swe_agent import DEFAULT_BACKEND
 
 def run_command(args):
     """Handle 'run' subcommand - run new benchmarks"""
-    runner = EnhancedBenchmarkRunner(model=args.model if hasattr(args, 'model') else None)
+    runner = EnhancedBenchmarkRunner(
+        model=args.model if hasattr(args, 'model') else None,
+        backend=args.backend if hasattr(args, 'backend') and args.backend else DEFAULT_BACKEND,
+    )
     
     # Set default limit if not specified
     if not args.limit:
@@ -59,13 +63,14 @@ def run_command(args):
     print(f"Dataset: {args.dataset}")
     print(f"Instances: {args.limit}")
     if hasattr(args, 'model') and args.model:
-        model_name = get_model_name(args.model) if args.model else None
+        model_name = get_model_name(args.model, runner.backend) if args.model else None
         print(f"Model: {args.model} -> {model_name}")
+    print(f"Backend: {runner.backend}")
     print(f"Evaluation: {'DISABLED' if args.no_eval else 'ENABLED'}")
     print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     # Run inference
-    print("\nPhase 1: Generating patches with Claude Code...")
+    print(f"\nPhase 1: Generating patches with {runner.backend.title()} Code...")
     start_time = time.time()
     prediction_file, generation_time = runner.run_inference(args.dataset, args.limit)
     
@@ -319,8 +324,9 @@ def check_command(args):
 
 def list_models_command(args):
     """List available models"""
+    backend = args.backend if hasattr(args, 'backend') and args.backend else DEFAULT_BACKEND
     print()
-    print(list_models())
+    print(list_models(backend))
     print()
     return 0
 
@@ -364,7 +370,8 @@ Examples:
     run_parser.add_argument('--dataset', default='princeton-nlp/SWE-bench_Lite', help='Dataset to use')
     run_parser.add_argument('--max-workers', type=int, default=2, help='Max parallel Docker containers')
     run_parser.add_argument('--notes', default='', help='Optional notes about this run')
-    run_parser.add_argument('--model', type=str, help='Model to use (e.g., opus-4.1, sonnet-3.7, or any /model name)')
+    run_parser.add_argument('--model', type=str, help='Model to use (e.g., opus-4.1, codex-4.2)')
+    run_parser.add_argument('--backend', type=str, choices=['claude', 'codex'], help='Code model backend')
     
     # EVAL command
     eval_parser = subparsers.add_parser('eval', help='Evaluate past predictions')
@@ -393,7 +400,8 @@ Examples:
     subparsers.add_parser('quick', help='Quick test (10 instances with eval)')
     subparsers.add_parser('full', help='Full test (300 instances with eval)')
     subparsers.add_parser('check', help='Check scores (stats + pending)')
-    subparsers.add_parser('list-models', help='List available Claude models')
+    list_parser = subparsers.add_parser('list-models', help='List available models')
+    list_parser.add_argument('--backend', type=str, choices=['claude', 'codex'], help='Backend to list')
     
     args = parser.parse_args()
     

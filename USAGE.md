@@ -47,6 +47,8 @@ python swe_bench.py run --quick --no-eval
 
 # More parallel Docker workers
 python swe_bench.py run --limit 20 --max-workers 4
+# Use Codex backend
+python swe_bench.py run --quick --backend codex
 ```
 
 ### Model Selection
@@ -54,6 +56,8 @@ python swe_bench.py run --limit 20 --max-workers 4
 ```bash
 # List available models
 python swe_bench.py list-models
+# Codex models
+python swe_bench.py list-models --backend codex
 
 # Use aliases for convenience
 python swe_bench.py run --model opus-4.1 --quick    # Latest Opus
@@ -66,6 +70,8 @@ python swe_bench.py run --model claude-opus-4-1-20250805 --quick
 
 # Any model accepted by Claude's /model command works
 python swe_bench.py run --model custom-model-name --quick
+# With Codex backend
+python swe_bench.py run --model codex-4.2 --backend codex --limit 5
 ```
 
 ### Evaluating Past Predictions

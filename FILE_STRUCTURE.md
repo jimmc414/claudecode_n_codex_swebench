@@ -1,4 +1,4 @@
-# Claude Code SWE-bench File Structure
+# SWE-bench Code Model File Structure
 
 ## ESSENTIAL FILES (Must Keep)
 
@@ -6,7 +6,7 @@
 claudecode_swe_bench/
 │
 ├── swe_bench.py                 # Main unified tool - ESSENTIAL
-├── claude_swe_agent.py          # Core agent that runs Claude Code - ESSENTIAL
+├── code_swe_agent.py          # Core agent that runs Claude Code or Codex - ESSENTIAL
 ├── run_benchmark_with_eval.py   # Benchmark runner - ESSENTIAL (imported by swe_bench.py)
 ├── evaluate_predictions.py      # Evaluation handler - ESSENTIAL (imported by swe_bench.py)
 ├── show_scores.py               # Score viewer - ESSENTIAL (imported by swe_bench.py)

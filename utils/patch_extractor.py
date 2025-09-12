@@ -4,6 +4,7 @@ import subprocess
 from typing import List, Dict, Optional, Tuple
 from unidiff import PatchSet
 import tempfile
+import difflib
 
 class PatchExtractor:
     """Extract patches from Claude Code's responses and file changes."""
@@ -73,50 +74,31 @@ class PatchExtractor:
             
         return changes
     
-    def create_patch_from_changes(self, before_state: Dict[str, str], 
+    def create_patch_from_changes(self, before_state: Dict[str, str],
                                 after_state: Dict[str, str]) -> str:
         """Create a unified diff patch from before/after file states."""
         patch_lines = []
-        
+
         # Find all files that changed
         all_files = set(before_state.keys()) | set(after_state.keys())
-        
+
         for file_path in sorted(all_files):
-            before_content = before_state.get(file_path, "")
-            after_content = after_state.get(file_path, "")
-            
+            before_content = before_state.get(file_path, "").splitlines(keepends=True)
+            after_content = after_state.get(file_path, "").splitlines(keepends=True)
+
             if before_content == after_content:
                 continue
-                
-            # Create temporary files for diff
-            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f1:
-                f1.write(before_content)
-                temp_before = f1.name
-                
-            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f2:
-                f2.write(after_content)
-                temp_after = f2.name
-                
-            try:
-                # Generate unified diff
-                result = subprocess.run(
-                    ["diff", "-u", temp_before, temp_after],
-                    capture_output=True,
-                    text=True
-                )
-                
-                if result.stdout:
-                    # Replace temp filenames with actual paths
-                    diff_output = result.stdout
-                    diff_output = diff_output.replace(temp_before, f"a/{file_path}")
-                    diff_output = diff_output.replace(temp_after, f"b/{file_path}")
-                    patch_lines.append(diff_output)
-                    
-            finally:
-                os.unlink(temp_before)
-                os.unlink(temp_after)
-                
-        return "\n".join(patch_lines)
+
+            diff_output = difflib.unified_diff(
+                before_content,
+                after_content,
+                fromfile=f"a/{file_path}",
+                tofile=f"b/{file_path}",
+            )
+
+            patch_lines.extend(diff_output)
+
+        return "".join(patch_lines)
     
     def validate_patch(self, patch: str) -> Tuple[bool, Optional[str]]:
         """Validate that a patch is well-formed."""
