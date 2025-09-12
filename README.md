@@ -6,13 +6,16 @@ This project provides an empirical framework for measuring the performance of co
 
 The SWE-bench benchmark presents the model with actual GitHub issues from popular open-source projects and measures its ability to generate patches that successfully resolve these issues. This provides a concrete, measurable answer to the question: "How well do these code models actually perform on real software engineering tasks?"
 
+> **Platform support:** The tools in this repository run on Linux, macOS, and Windows (including WSL). Replace `python` with `python3` on Unix-like systems or `py` on Windows if needed.
+
 ## Getting Started in 5 Minutes
 
 ```bash
 # Assuming you have Python, a code model CLI (Claude or Codex), and Docker installed:
+# Replace `python` with `python3` on Linux/macOS or `py` on Windows if needed.
 git clone https://github.com/jimmc414/claudecode_n_codex_swebench.git
 cd claudecode_n_codex_swebench
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python swe_bench.py run --limit 1  # Run your first test (~10 min)
 python swe_bench.py check           # See your results
 ```
@@ -40,7 +43,7 @@ Before starting, ensure you have:
 
 1. **Python 3.8 or newer**
    ```bash
-   python --version  # Should show 3.8+
+   python --version  # or python3/py --version
    ```
 
 2. **Claude Code or Codex CLI installed and logged in**
@@ -76,7 +79,7 @@ git clone <repository-url>
 cd claudecode_n_codex_swebench
 
 # 2. Install all Python dependencies (includes swebench)
-pip install -r requirements.txt
+python -m pip install -r requirements.txt  # Use python3/py as needed
 
 # 3. Verify everything is working
 python swe_bench.py list-models               # Claude models
