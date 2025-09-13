@@ -94,8 +94,12 @@ class PredictionEvaluator:
         print("  - Enter 'all' for all files")
         print("  - Enter 'pending' for unevaluated files only")
         print("  - Enter 'q' to quit")
-        
-        selection = input("\nYour choice: ").strip().lower()
+
+        try:
+            selection = input("\nYour choice: ").strip().lower()
+        except EOFError:
+            print("\nNo input detected. Exiting selection.")
+            return []
         
         if selection == 'q':
             return []
@@ -144,7 +148,7 @@ class PredictionEvaluator:
         return "unknown"
     
     def evaluate_file(self, prediction_file: Path, dataset_name="princeton-nlp/SWE-bench_Lite",
-                      max_workers=2, update_log=True) -> Tuple[float, float]:
+                      max_workers=2, update_log=True, force=False) -> Tuple[float, float]:
         """Evaluate a single prediction file"""
         print(f"\n{'='*70}")
         print(f"Evaluating: {prediction_file.name}")
@@ -153,10 +157,16 @@ class PredictionEvaluator:
         # Check current status
         status = self.check_evaluation_status(prediction_file)
         if status == "completed":
-            print("⚠️ This file has already been evaluated.")
-            response = input("Re-evaluate? (y/n): ").strip().lower()
-            if response != 'y':
-                return None, 0
+            if force:
+                print("⚠️ This file has already been evaluated. Re-evaluating due to --force.")
+            else:
+                print("⚠️ This file has already been evaluated.")
+                try:
+                    response = input("Re-evaluate? (y/n): ").strip().lower()
+                except EOFError:
+                    response = 'n'
+                if response != 'y':
+                    return None, 0
         
         # Prepare for evaluation
         eval_file = str(prediction_file).replace('.jsonl', '_eval.jsonl')
@@ -323,6 +333,8 @@ def main():
                        help="Show what would be evaluated without running")
     parser.add_argument("--no-update-log", action="store_true",
                        help="Don't update the log file")
+    parser.add_argument("--force", "--yes", action="store_true",
+                        help="Skip confirmation prompts and re-evaluate files")
     
     args = parser.parse_args()
     
@@ -397,8 +409,11 @@ def main():
         return
     
     # Confirm
-    if len(selected_files) > 1:
-        response = input("\nProceed with evaluation? (y/n): ").strip().lower()
+    if len(selected_files) > 1 and not args.force:
+        try:
+            response = input("\nProceed with evaluation? (y/n): ").strip().lower()
+        except EOFError:
+            response = 'n'
         if response != 'y':
             return
     
@@ -408,10 +423,11 @@ def main():
         print(f"\n[{i}/{len(selected_files)}] Processing {pred_file.name}")
         
         score, eval_time = evaluator.evaluate_file(
-            pred_file, 
-            args.dataset, 
+            pred_file,
+            args.dataset,
             args.max_workers,
-            update_log=not args.no_update_log
+            update_log=not args.no_update_log,
+            force=args.force
         )
         
         if score is not None:
