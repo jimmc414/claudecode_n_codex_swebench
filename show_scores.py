@@ -27,9 +27,11 @@ class ScoreViewer:
                 try:
                     entry = json.loads(line.strip())
                     scores.append(entry)
-                except:
-                    continue
-        
+                except json.JSONDecodeError:
+                    print(f"Warning: Skipping invalid JSON line: {line.strip()}")
+                except Exception as exc:
+                    print(f"Warning: Failed to parse line due to {exc}: {line.strip()}")
+
         return scores
     
     def display_scores(self, scores: List[Dict], filter_type="all"):

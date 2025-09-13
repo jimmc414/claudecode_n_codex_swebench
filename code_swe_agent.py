@@ -108,8 +108,8 @@ class CodeSWEAgent:
             # Try to return to original directory if possible
             try:
                 os.chdir(str(original_dir))
-            except:
-                pass
+            except Exception as chdir_error:
+                print(f"Warning: Failed to return to original directory: {chdir_error}")
             return None
             
     def process_instance(self, instance: Dict) -> Dict:
