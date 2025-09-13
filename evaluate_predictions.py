@@ -44,9 +44,10 @@ class PredictionEvaluator:
                 try:
                     with jsonlines.open(f) as reader:
                         instance_count = sum(1 for _ in reader)
-                except:
-                    pass
-                
+                except (jsonlines.Error, OSError) as exc:
+                    print(f"Warning: Could not read {f}: {exc}")
+                    continue
+
                 files.append((f, timestamp, instance_count))
         
         return sorted(files, key=lambda x: x[1], reverse=True)
@@ -118,12 +119,12 @@ class PredictionEvaluator:
                         i = int(part)
                         if 1 <= i <= len(files):
                             selected.append(files[i-1])
-            except:
-                print("Invalid selection.")
+            except ValueError as exc:
+                print(f"Invalid selection: {exc}")
                 return []
-            
+
             return selected
-    
+
     def check_evaluation_status(self, prediction_file) -> str:
         """Check if a prediction file has been evaluated"""
         if not self.log_file.exists():
@@ -135,9 +136,11 @@ class PredictionEvaluator:
                     entry = json.loads(line)
                     if entry.get("prediction_file", "").endswith(prediction_file.name):
                         return entry.get("evaluation_status", "unknown")
-                except:
-                    continue
-        
+                except json.JSONDecodeError:
+                    print(f"Warning: Skipping invalid JSON line: {line.strip()}")
+                except Exception as exc:
+                    print(f"Warning: Failed to parse log line due to {exc}: {line.strip()}")
+
         return "unknown"
     
     def evaluate_file(self, prediction_file: Path, dataset_name="princeton-nlp/SWE-bench_Lite",
@@ -273,7 +276,11 @@ class PredictionEvaluator:
                         entry["evaluation_timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         updated = True
                     entries.append(entry)
-                except:
+                except json.JSONDecodeError:
+                    print(f"Warning: Skipping invalid JSON line: {line.strip()}")
+                    entries.append(line.strip())
+                except Exception as exc:
+                    print(f"Warning: Failed to parse log line due to {exc}: {line.strip()}")
                     entries.append(line.strip())
         
         # Write back
