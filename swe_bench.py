@@ -215,8 +215,11 @@ def eval_command(args):
         return 0
     
     # Confirm if multiple files
-    if len(selected_files) > 1:
-        response = input("\nProceed with evaluation? (y/n): ").strip().lower()
+    if len(selected_files) > 1 and not args.force:
+        try:
+            response = input("\nProceed with evaluation? (y/n): ").strip().lower()
+        except EOFError:
+            response = 'n'
         if response != 'y':
             return 0
     
@@ -226,10 +229,11 @@ def eval_command(args):
         print(f"\n[{i}/{len(selected_files)}] Processing {pred_file.name}")
         
         score, eval_time = evaluator.evaluate_file(
-            pred_file, 
-            args.dataset, 
+            pred_file,
+            args.dataset,
             args.max_workers,
-            update_log=not args.no_update_log
+            update_log=not args.no_update_log,
+            force=args.force
         )
         
         if score is not None:
@@ -386,6 +390,8 @@ Examples:
     eval_parser.add_argument('--max-workers', type=int, default=2, help='Max parallel Docker containers')
     eval_parser.add_argument('--dry-run', action='store_true', help='Show what would be evaluated')
     eval_parser.add_argument('--no-update-log', action='store_true', help="Don't update log file")
+    eval_parser.add_argument('--force', '--yes', action='store_true',
+                              help='Skip confirmation prompts and re-evaluate files')
     
     # SCORES command
     scores_parser = subparsers.add_parser('scores', help='View and analyze scores')
