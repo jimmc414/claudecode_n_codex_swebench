@@ -113,7 +113,10 @@ class ScoreViewer:
                 avg_eval = sum(eval_scores)/len(eval_scores)
                 drop = avg_gen - avg_eval
                 print(f"\nAverage drop from generation to evaluation: {drop:.1f}%")
-                print(f"Success rate: {avg_eval/avg_gen*100:.1f}% of generated patches actually work")
+                if avg_gen == 0:
+                    print("No patches generated; success rate unavailable.")
+                else:
+                    print(f"Success rate: {avg_eval/avg_gen*100:.1f}% of generated patches actually work")
         
         # Time statistics
         all_gen_times = [s.get("generation_time", 0) for s in scores 
