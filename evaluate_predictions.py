@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import jsonlines
 from typing import List, Tuple
+import logging
 
 class PredictionEvaluator:
     def __init__(self):
@@ -176,12 +177,15 @@ class PredictionEvaluator:
         with jsonlines.open(prediction_file) as reader:
             for obj in reader:
                 predictions.append(obj)
-        
+
+        model_name = None
         with jsonlines.open(eval_file, mode='w') as writer:
             for pred in predictions:
+                if model_name is None:
+                    model_name = pred.get("model", "claude-code")
                 eval_pred = {
                     "instance_id": pred.get("instance_id", ""),
-                    "model_name_or_path": pred.get("model", "claude-code"),
+                    "model_name_or_path": model_name,
                     "model_patch": pred.get("prediction", "")
                 }
                 writer.write(eval_pred)
@@ -198,7 +202,8 @@ class PredictionEvaluator:
             "--run_id", run_id,
             "--max_workers", str(max_workers),
             "--timeout", "600",
-            "--cache_level", "env"
+            "--cache_level", "env",
+            "--report_dir", str(self.eval_results_dir),
         ]
         
         print(f"\n🔬 Running Docker evaluation...")
@@ -211,7 +216,8 @@ class PredictionEvaluator:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                bufsize=1
+                bufsize=1,
+                cwd=str(self.eval_results_dir),
             )
             
             output_lines = []
@@ -221,45 +227,51 @@ class PredictionEvaluator:
             
             process.wait()
             eval_time = time.time() - start_time
-            
-            # Parse results
-            output_text = ''.join(output_lines)
-            
-            # Look for success rate
-            patterns = [
-                r'(\d+) of (\d+) instances',
-                r'(\d+)/(\d+) resolved',
-                r'resolved (\d+) of (\d+)',
-                r'Success Rate: (\d+\.?\d*)\%'
-            ]
-            
-            resolved = 0
-            total = len(predictions)
-            
-            for pattern in patterns:
-                match = re.search(pattern, output_text)
-                if match:
-                    if '%' in pattern:
-                        score = float(match.group(1))
-                        print(f"\n✅ Evaluation Score: {score:.2f}%")
-                        return score, eval_time
-                    else:
-                        resolved = int(match.group(1))
-                        total = int(match.group(2)) if len(match.groups()) > 1 else total
-                        break
-            
-            if total > 0:
-                score = (resolved / total) * 100
-                print(f"\n✅ Evaluation Score: {score:.2f}% ({resolved}/{total} issues fixed)")
-                
-                # Update log if requested
-                if update_log:
-                    self.update_log_entry(prediction_file, score, eval_time)
-                
-                return score, eval_time
-            else:
-                print("\n⚠️ Could not parse evaluation results")
-                return None, eval_time
+
+            json_path = self.eval_results_dir / f"{model_name}.{run_id}.json"
+            resolved = total = None
+            if json_path.exists():
+                try:
+                    with open(json_path) as f:
+                        data = json.load(f)
+                    resolved = data.get("resolved_instances")
+                    total = data.get("total_instances") or len(predictions)
+                except (OSError, json.JSONDecodeError) as exc:
+                    logging.warning(f"Failed to parse evaluation JSON: {exc}")
+
+            if resolved is None or total is None:
+                logging.warning("Structured evaluation results missing; falling back to regex parsing.")
+                output_text = ''.join(output_lines)
+                patterns = [
+                    r'(\d+) of (\d+) instances',
+                    r'(\d+)/(\d+) resolved',
+                    r'resolved (\d+) of (\d+)',
+                    r'Success Rate: (\d+\.?\d*)\%'
+                ]
+                resolved = None
+                total = None
+                for pattern in patterns:
+                    match = re.search(pattern, output_text)
+                    if match:
+                        if '%' in pattern:
+                            score = float(match.group(1))
+                            print(f"\n✅ Evaluation Score: {score:.2f}%")
+                            return score, eval_time
+                        else:
+                            resolved = int(match.group(1))
+                            total = int(match.group(2)) if len(match.groups()) > 1 else len(predictions)
+                            break
+                if resolved is None or total is None:
+                    print("\n⚠️ Could not parse evaluation results")
+                    return None, eval_time
+
+            score = (resolved / total) * 100 if total else 0
+            print(f"\n✅ Evaluation Score: {score:.2f}% ({resolved}/{total} issues fixed)")
+
+            if update_log:
+                self.update_log_entry(prediction_file, score, eval_time)
+
+            return score, eval_time
                 
         except Exception as e:
             print(f"\n❌ Evaluation error: {e}")
