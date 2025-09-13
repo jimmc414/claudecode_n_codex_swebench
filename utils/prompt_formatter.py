@@ -76,11 +76,9 @@ Base directory: {base_path}
     def format_for_cli(self, instance: Dict) -> str:
         """Format the prompt for Claude Code CLI execution."""
         base_prompt = self.format_issue(instance)
-        
-        # Escape quotes and special characters for shell
-        escaped_prompt = base_prompt.replace('"', '\\"').replace('$', '\\$').replace('`', '\\`')
-        
-        return escaped_prompt
+
+        # Return the raw prompt without escaping for CLI input
+        return base_prompt
     
     def extract_instance_info(self, instance: Dict) -> Dict:
         """Extract key information from a SWE-bench instance."""
