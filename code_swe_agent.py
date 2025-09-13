@@ -54,6 +54,8 @@ class CodeSWEAgent:
         # Create directories if they don't exist
         self.results_dir.mkdir(exist_ok=True)
         self.predictions_dir.mkdir(exist_ok=True)
+        self.pred_timestamp: Optional[str] = None
+        self.pred_file: Optional[Path] = None
 
     def setup_repository(self, instance: Dict) -> Optional[str]:
         """Set up a repository for testing."""
@@ -195,7 +197,7 @@ class CodeSWEAgent:
                 "extracted_patch": patch
             }, f, indent=2)
             
-    def run_on_dataset(self, dataset_name: str, split: str = "test", 
+    def run_on_dataset(self, dataset_name: str, split: str = "test",
                       limit: Optional[int] = None) -> List[Dict]:
         """Run on a full dataset."""
         print(f"Loading dataset: {dataset_name}")
@@ -204,15 +206,27 @@ class CodeSWEAgent:
         if limit:
             dataset = dataset.select(range(min(limit, len(dataset))))
             
-        predictions = []
-        
+        self.pred_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.pred_file = self.predictions_dir / f"predictions_{self.pred_timestamp}.jsonl"
+        if self.pred_file.exists():
+            self.pred_file.unlink()
+        json_file = self.predictions_dir / f"predictions_{self.pred_timestamp}.json"
+        if json_file.exists():
+            json_file.unlink()
+
+        predictions: List[Dict] = []
+
         for instance in tqdm(dataset, desc="Processing instances"):
             prediction = self.process_instance(instance)
             predictions.append(prediction)
-            
-            # Save predictions incrementally
-            self._save_predictions(predictions)
-            
+
+            # Save prediction incrementally
+            self._save_predictions(prediction)
+
+        with open(json_file, 'w') as f:
+            json.dump(predictions, f, indent=2)
+
+        print(f"Saved predictions to {self.pred_file}")
         return predictions
     
     def run_on_instance(self, instance_id: str, dataset_name: str = "princeton-nlp/SWE-bench_Lite") -> Dict:
@@ -231,22 +245,13 @@ class CodeSWEAgent:
             
         return self.process_instance(instance)
     
-    def _save_predictions(self, predictions: List[Dict]):
-        """Save predictions to file."""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        pred_file = self.predictions_dir / f"predictions_{timestamp}.jsonl"
-        
-        with jsonlines.open(pred_file, mode='w') as writer:
-            for pred in predictions:
-                writer.write(pred)
-                
-        # Also save as regular JSON for convenience
-        json_file = self.predictions_dir / f"predictions_{timestamp}.json"
-        with open(json_file, 'w') as f:
-            json.dump(predictions, f, indent=2)
-            
-        print(f"Saved predictions to {pred_file}")
-        return pred_file
+    def _save_predictions(self, prediction: Dict):
+        """Append a single prediction to the jsonl file."""
+        if not self.pred_file:
+            raise ValueError("Prediction timestamp not initialized. Call run_on_dataset first.")
+
+        with jsonlines.open(self.pred_file, mode='a') as writer:
+            writer.write(prediction)
 
 
 def main():
