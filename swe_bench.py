@@ -375,7 +375,7 @@ Examples:
     run_parser.add_argument('--max-workers', type=int, default=2, help='Max parallel Docker containers')
     run_parser.add_argument('--notes', default='', help='Optional notes about this run')
     run_parser.add_argument('--model', type=str, help='Model to use (e.g., opus-4.1, codex-4.2)')
-    run_parser.add_argument('--backend', type=str, choices=['claude', 'codex'], help='Code model backend')
+    run_parser.add_argument('--backend', type=str, choices=['claude', 'codex', 'gemini'], help='Code model backend')
     
     # EVAL command
     eval_parser = subparsers.add_parser('eval', help='Evaluate past predictions')
@@ -407,7 +407,7 @@ Examples:
     subparsers.add_parser('full', help='Full test (300 instances with eval)')
     subparsers.add_parser('check', help='Check scores (stats + pending)')
     list_parser = subparsers.add_parser('list-models', help='List available models')
-    list_parser.add_argument('--backend', type=str, choices=['claude', 'codex'], help='Backend to list')
+    list_parser.add_argument('--backend', type=str, choices=['claude', 'codex', 'gemini'], help='Backend to list')
     
     args = parser.parse_args()
     
