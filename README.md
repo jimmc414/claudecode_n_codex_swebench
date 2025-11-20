@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This project provides an empirical framework for measuring the performance of code-focused language models like Claude Code and Codex on real-world software engineering tasks. It was built to provide objective, reproducible metrics that allow users to assess these tools for themselves, rather than relying on anecdotal reports or marketing claims.
+This project provides an empirical framework for measuring the performance of code-focused language models like Claude Code, Codex, and Gemini on real-world software engineering tasks. It was built to provide objective, reproducible metrics that allow users to assess these tools for themselves, rather than relying on anecdotal reports or marketing claims.
 
 The SWE-bench benchmark presents the model with actual GitHub issues from popular open-source projects and measures its ability to generate patches that successfully resolve these issues. This provides a concrete, measurable answer to the question: "How well do these code models actually perform on real software engineering tasks?"
 
@@ -28,6 +28,7 @@ For detailed setup instructions, see [Prerequisites](#prerequisites) and [Instal
 # 1. Run your first test (1 instance, ~10 minutes)
 python swe_bench.py run --limit 1               # Claude Code (default)
 python swe_bench.py run --limit 1 --backend codex  # Codex
+python swe_bench.py run --limit 1 --backend gemini # Gemini
 
 # 2. Check your results
 python swe_bench.py check
@@ -46,13 +47,15 @@ Before starting, ensure you have:
    python --version  # or python3/py --version
    ```
 
-2. **Claude Code or Codex CLI installed and logged in**
+2. **Claude Code, Codex, or Gemini CLI installed and logged in**
    ```bash
    # Claude Code
    claude --version  # Should work without errors
    # Codex
    codex --version   # Should work without errors
-   # If not logged in, run the relevant CLI (claude or codex)
+   # Gemini
+   gemini --version  # Should work without errors
+   # If not logged in, run the relevant CLI
    ```
 
 3. **Docker installed and running**
@@ -84,6 +87,7 @@ python -m pip install -r requirements.txt  # Use python3/py as needed
 # 3. Verify everything is working
 python swe_bench.py list-models               # Claude models
 python swe_bench.py list-models --backend codex  # Codex models
+python swe_bench.py list-models --backend gemini # Gemini models
 
 # Optional: Quick test to verify full setup
 python swe_bench.py run --limit 1 --no-eval  # Test without Docker (2-5 min)
@@ -96,6 +100,7 @@ If you get errors:
 
 - **"Claude CLI not found"**: Install from https://claude.ai/download
 - **"Codex CLI not found"**: Ensure `codex` is installed and in your PATH
+- **"Gemini CLI not found"**: Ensure `gemini` is installed and in your PATH
 - **"Docker daemon not running"**: Start Docker Desktop or `sudo systemctl start docker`
 - **"swebench not found"**: Run `pip install swebench`
 - **Out of memory**: Increase Docker memory in Docker Desktop settings
@@ -117,6 +122,7 @@ python swe_bench.py full           # 300 instances with evaluation
 python swe_bench.py check          # View scores and statistics
 python swe_bench.py list-models    # Show available models (Claude by default)
 python swe_bench.py list-models --backend codex  # Show Codex models
+python swe_bench.py list-models --backend gemini # Show Gemini models
 ```
 
 ### Running Benchmarks

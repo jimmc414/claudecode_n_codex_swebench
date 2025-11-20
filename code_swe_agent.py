@@ -20,6 +20,7 @@ import jsonlines
 
 from utils.claude_interface import ClaudeCodeInterface
 from utils.codex_interface import CodexCodeInterface
+from utils.gemini_interface import GeminiCodeInterface
 from utils.prompt_formatter import PromptFormatter
 from utils.patch_extractor import PatchExtractor
 from utils.model_registry import get_model_name
@@ -37,6 +38,8 @@ class CodeSWEAgent:
         self.backend = (backend or DEFAULT_BACKEND).lower()
         if self.backend == "codex":
             self.interface = CodexCodeInterface()
+        elif self.backend == "gemini":
+            self.interface = GeminiCodeInterface()
         else:
             self.backend = "claude"
             self.interface = ClaudeCodeInterface()
@@ -267,7 +270,7 @@ def main():
                        help="Path to custom prompt template")
     parser.add_argument("--model", type=str,
                        help="Model to use (e.g., opus-4.1, codex-4.2, or any name)")
-    parser.add_argument("--backend", type=str, choices=["claude", "codex"],
+    parser.add_argument("--backend", type=str, choices=["claude", "codex", "gemini"],
                        help="Code model backend to use")
     
     args = parser.parse_args()
@@ -275,7 +278,13 @@ def main():
     backend = args.backend or DEFAULT_BACKEND
 
     # Check if selected CLI is available
-    cli_cmd = "codex" if backend == "codex" else "claude"
+    if backend == "codex":
+        cli_cmd = "codex"
+    elif backend == "gemini":
+        cli_cmd = "gemini"
+    else:
+        cli_cmd = "claude"
+
     try:
         result = subprocess.run([cli_cmd, "--version"], capture_output=True, text=True)
         if result.returncode != 0:

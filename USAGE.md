@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-The `swe_bench.py` tool combines all benchmark functionality into one command and supports both Claude Code and Codex backends.
+The `swe_bench.py` tool combines all benchmark functionality into one command and supports Claude Code, Codex, and Gemini backends.
 
 ### Common Commands
 
@@ -49,6 +49,8 @@ python swe_bench.py run --quick --no-eval
 python swe_bench.py run --limit 20 --max-workers 4
 # Use Codex backend
 python swe_bench.py run --quick --backend codex
+# Use Gemini backend
+python swe_bench.py run --quick --backend gemini
 ```
 
 ### Model Selection
@@ -58,6 +60,8 @@ python swe_bench.py run --quick --backend codex
 python swe_bench.py list-models
 # Codex models
 python swe_bench.py list-models --backend codex
+# Gemini models
+python swe_bench.py list-models --backend gemini
 
 # Use aliases for convenience
 python swe_bench.py run --model opus-4.1 --quick    # Latest Opus
@@ -72,6 +76,8 @@ python swe_bench.py run --model claude-opus-4-1-20250805 --quick
 python swe_bench.py run --model custom-model-name --quick
 # With Codex backend
 python swe_bench.py run --model codex-4.2 --backend codex --limit 5
+# With Gemini backend
+python swe_bench.py run --model gemini-3-pro-preview --backend gemini --limit 5
 ```
 
 ### Evaluating Past Predictions
