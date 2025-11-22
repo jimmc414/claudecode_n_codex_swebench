@@ -1,7 +1,7 @@
 import os
 import json
 import subprocess
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,7 +24,7 @@ class ClaudeCodeInterface:
                 "Claude CLI not found. Please ensure 'claude' is installed and in PATH"
             )
 
-    def execute_code_cli(self, prompt: str, cwd: str, model: str = None) -> Dict[str, any]:
+    def execute_code_cli(self, prompt: str, cwd: str, model: str = None) -> Dict[str, Any]:
         """Execute Claude Code via CLI and capture the response.
 
         Args:
@@ -32,6 +32,7 @@ class ClaudeCodeInterface:
             cwd: Working directory to execute in.
             model: Optional model to use (e.g., 'opus-4.1', 'sonnet-3.7').
         """
+        original_cwd = None
         try:
             # Save the current directory
             original_cwd = os.getcwd()
@@ -64,7 +65,11 @@ class ClaudeCodeInterface:
             }
 
         except subprocess.TimeoutExpired:
-            os.chdir(original_cwd)
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Already in error state, don't mask original error
             return {
                 "success": False,
                 "stdout": "",
@@ -72,7 +77,11 @@ class ClaudeCodeInterface:
                 "returncode": -1,
             }
         except Exception as e:
-            os.chdir(original_cwd)
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Already in error state, don't mask original error
             return {
                 "success": False,
                 "stdout": "",

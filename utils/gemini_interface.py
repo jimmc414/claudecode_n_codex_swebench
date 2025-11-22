@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Dict, List
+from typing import Dict, List, Any
 
 class GeminiCodeInterface:
     """Interface for interacting with the Google Gemini CLI."""
@@ -18,7 +18,7 @@ class GeminiCodeInterface:
                 "Gemini CLI not found. Please ensure 'gemini' is installed and in PATH"
             )
 
-    def execute_code_cli(self, prompt: str, cwd: str, model: str = None) -> Dict[str, any]:
+    def execute_code_cli(self, prompt: str, cwd: str, model: str = None) -> Dict[str, Any]:
         """Execute Gemini via CLI and capture the response.
 
         Args:
@@ -26,6 +26,7 @@ class GeminiCodeInterface:
             cwd: Working directory to execute in.
             model: Optional model to use.
         """
+        original_cwd = None
         try:
             original_cwd = os.getcwd()
             os.chdir(cwd)
@@ -54,7 +55,11 @@ class GeminiCodeInterface:
             }
 
         except subprocess.TimeoutExpired:
-            os.chdir(original_cwd)
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Already in error state, don't mask original error
             return {
                 "success": False,
                 "stdout": "",
@@ -62,7 +67,11 @@ class GeminiCodeInterface:
                 "returncode": -1,
             }
         except Exception as e:
-            os.chdir(original_cwd)
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Already in error state, don't mask original error
             return {
                 "success": False,
                 "stdout": "",

@@ -14,7 +14,7 @@ import re
 from datetime import datetime, timedelta
 from pathlib import Path
 import jsonlines
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import logging
 
 class PredictionEvaluator:
@@ -149,7 +149,7 @@ class PredictionEvaluator:
         return "unknown"
     
     def evaluate_file(self, prediction_file: Path, dataset_name="princeton-nlp/SWE-bench_Lite",
-                      max_workers=2, update_log=True, force=False) -> Tuple[float, float]:
+                      max_workers=2, update_log=True, force=False) -> Tuple[Optional[float], float]:
         """Evaluate a single prediction file"""
         print(f"\n{'='*70}")
         print(f"Evaluating: {prediction_file.name}")

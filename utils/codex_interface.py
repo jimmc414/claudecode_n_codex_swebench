@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Dict, List
+from typing import Dict, List, Any
 
 class CodexCodeInterface:
     """Interface for interacting with the Codex CLI."""
@@ -18,8 +18,9 @@ class CodexCodeInterface:
                 "Codex CLI not found. Please ensure 'codex' is installed and in PATH"
             )
 
-    def execute_code_cli(self, prompt: str, cwd: str, model: str = None) -> Dict[str, any]:
+    def execute_code_cli(self, prompt: str, cwd: str, model: str = None) -> Dict[str, Any]:
         """Execute Codex via CLI and capture the response."""
+        original_cwd = None
         try:
             original_cwd = os.getcwd()
             os.chdir(cwd)
@@ -41,7 +42,11 @@ class CodexCodeInterface:
                 "returncode": result.returncode,
             }
         except subprocess.TimeoutExpired:
-            os.chdir(original_cwd)
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Already in error state, don't mask original error
             return {
                 "success": False,
                 "stdout": "",
@@ -49,7 +54,11 @@ class CodexCodeInterface:
                 "returncode": -1,
             }
         except Exception as e:
-            os.chdir(original_cwd)
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Already in error state, don't mask original error
             return {
                 "success": False,
                 "stdout": "",

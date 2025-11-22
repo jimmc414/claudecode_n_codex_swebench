@@ -21,35 +21,41 @@ class PatchExtractor:
         
     def extract_from_cli_output(self, output: str, repo_path: str) -> str:
         """Extract patch from Claude Code CLI output by analyzing git diff."""
+        original_cwd = None
         try:
             # Change to repo directory
             original_cwd = os.getcwd()
             os.chdir(repo_path)
-            
+
             # First, add any untracked files to the index so they appear in diff
             subprocess.run(
                 ["git", "add", "-N", "."],
                 capture_output=True,
                 text=True
             )
-            
+
             # Get the diff against HEAD to capture all changes
             result = subprocess.run(
                 ["git", "diff", "HEAD", "--no-color", "--no-ext-diff"],
                 capture_output=True,
                 text=True
             )
-            
+
             os.chdir(original_cwd)
-            
+
             if result.returncode == 0:
                 return result.stdout
             else:
                 print(f"Git diff failed: {result.stderr}")
                 return ""
-                
+
         except Exception as e:
             print(f"Error extracting patch: {e}")
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Already in error state, don't mask original error
             return ""
             
     def extract_from_response(self, response: str) -> List[Dict[str, str]]:
@@ -121,32 +127,45 @@ class PatchExtractor:
             
     def apply_patch_test(self, patch: str, repo_path: str) -> Tuple[bool, str]:
         """Test if a patch can be applied cleanly."""
+        original_cwd = None
+        patch_file = None
         try:
             # Save patch to temporary file
             with tempfile.NamedTemporaryFile(mode='w', suffix='.patch', delete=False) as f:
                 f.write(patch)
                 patch_file = f.name
-                
+
             original_cwd = os.getcwd()
             os.chdir(repo_path)
-            
+
             # Test patch application
             result = subprocess.run(
                 ["git", "apply", "--check", patch_file],
                 capture_output=True,
                 text=True
             )
-            
-            os.chdir(original_cwd)
-            os.unlink(patch_file)
-            
+
             if result.returncode == 0:
                 return True, "Patch can be applied cleanly"
             else:
                 return False, f"Patch application failed: {result.stderr}"
-                
+
         except Exception as e:
             return False, f"Error testing patch: {str(e)}"
+
+        finally:
+            # Clean up resources
+            if original_cwd is not None:
+                try:
+                    os.chdir(original_cwd)
+                except Exception:
+                    pass  # Best effort cleanup
+
+            if patch_file is not None:
+                try:
+                    os.unlink(patch_file)
+                except Exception:
+                    pass  # Best effort cleanup
             
     def format_for_swebench(self, patch: str, instance_id: str, model_name: str = "claude-code") -> Dict:
         """Format patch for SWE-bench submission."""

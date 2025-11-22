@@ -68,6 +68,7 @@ class CodeSWEAgent:
 
         # Create temporary directory for this instance (cross-platform)
         temp_dir = Path(tempfile.gettempdir()) / f"swe_bench_{instance_id}"
+        original_dir = None
 
         try:
             # Remove if exists
@@ -76,22 +77,22 @@ class CodeSWEAgent:
 
             # Save current directory
             original_dir = Path.cwd()
-            
+
             # Clone repository
             print(f"Cloning {repo_name} to {temp_dir}")
             clone_url = f"https://github.com/{repo_name}.git"
-            
+
             result = subprocess.run(
                 ["git", "clone", clone_url, str(temp_dir)],
                 capture_output=True,
                 text=True,
                 cwd=str(original_dir)  # Ensure we're in a valid directory
             )
-            
+
             if result.returncode != 0:
                 print(f"Failed to clone repository: {result.stderr}")
                 return None
-                
+
             # Checkout base commit
             os.chdir(temp_dir)
             result = subprocess.run(
@@ -99,7 +100,7 @@ class CodeSWEAgent:
                 capture_output=True,
                 text=True
             )
-            
+
             if result.returncode != 0:
                 print(f"Failed to checkout commit: {result.stderr}")
                 os.chdir(str(original_dir))  # Return to original directory
@@ -107,14 +108,15 @@ class CodeSWEAgent:
 
             os.chdir(str(original_dir))  # Return to original directory
             return str(temp_dir)
-            
+
         except Exception as e:
             print(f"Error setting up repository: {e}")
             # Try to return to original directory if possible
-            try:
-                os.chdir(str(original_dir))
-            except Exception as chdir_error:
-                print(f"Warning: Failed to return to original directory: {chdir_error}")
+            if original_dir is not None:
+                try:
+                    os.chdir(str(original_dir))
+                except Exception as chdir_error:
+                    print(f"Warning: Failed to return to original directory: {chdir_error}")
             return None
             
     def process_instance(self, instance: Dict) -> Dict:

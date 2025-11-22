@@ -341,15 +341,19 @@ def main():
             lines = f.readlines()
             recent = lines[-5:] if len(lines) >= 5 else lines
             for line in recent:
-                entry = json.loads(line)
-                gen_score = entry.get('generation_score', 0)
-                eval_score = entry.get('evaluation_score')
-                status = entry.get('evaluation_status', 'unknown')
-                
-                if status == "completed" and eval_score is not None:
-                    print(f"  {entry['timestamp']}: Gen={gen_score:.1f}% → Eval={eval_score:.1f}% (real)")
-                else:
-                    print(f"  {entry['timestamp']}: Gen={gen_score:.1f}% ({status})")
+                try:
+                    entry = json.loads(line)
+                    gen_score = entry.get('generation_score', 0)
+                    eval_score = entry.get('evaluation_score')
+                    status = entry.get('evaluation_status', 'unknown')
+
+                    if status == "completed" and eval_score is not None:
+                        print(f"  {entry['timestamp']}: Gen={gen_score:.1f}% → Eval={eval_score:.1f}% (real)")
+                    else:
+                        print(f"  {entry['timestamp']}: Gen={gen_score:.1f}% ({status})")
+                except json.JSONDecodeError:
+                    # Skip corrupted log entries
+                    continue
 
 if __name__ == "__main__":
     main()
